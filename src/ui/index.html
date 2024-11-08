@@ -6,6 +6,25 @@
 </head>
 <body>
     <div class="container">
+        <div class="header">
+            <h1>AI文件整理助手</h1>
+            <p class="subtitle">使用说明：选择AI模型 → 输入API密钥 → 选择需要整理的文件夹 → 描述整理需求 → 点击开始整理</p>
+        </div>
+
+        <div class="input-group">
+            <label>选择模型:</label>
+            <div class="model-select">
+                <label class="radio-label">
+                    <input type="radio" name="model" value="qwen" checked>
+                    阿里-通义千问
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="model" value="gpt">
+                    OpenAI GPT
+                </label>
+            </div>
+        </div>
+
         <div class="input-group">
             <label>API Key:</label>
             <input type="password" id="apiKey" placeholder="输入你的API Key">
@@ -22,7 +41,10 @@
         <div class="input-group">
             <label>整理需求:</label>
             <textarea id="requirement" placeholder="描述你的文件整理需求"></textarea>
-            <button id="organize">开始整理</button>
+            <div class="button-group">
+                <button id="organize">开始整理</button>
+                <button id="showDialog" class="secondary">查看对话记录</button>
+            </div>
         </div>
 
         <div class="log-container">
@@ -30,6 +52,20 @@
             <div id="logArea" class="log-area"></div>
         </div>
     </div>
+
+    <!-- 添加对话记录弹窗 -->
+    <div id="dialogModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI 对话记录</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <pre id="dialogContent"></pre>
+            </div>
+        </div>
+    </div>
+
     <script src="renderer.js"></script>
 </body>
 </html> 
