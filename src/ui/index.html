@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI文件整理助手</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="input-group">
+            <label>API Key:</label>
+            <input type="password" id="apiKey" placeholder="输入你的API Key">
+        </div>
+
+        <div class="input-group">
+            <label>文件夹路径:</label>
+            <div class="folder-input">
+                <input type="text" id="folderPath" placeholder="选择或粘贴文件夹路径">
+                <button id="selectFolder">选择文件夹</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>整理需求:</label>
+            <textarea id="requirement" placeholder="描述你的文件整理需求"></textarea>
+            <button id="organize">开始整理</button>
+        </div>
+
+        <div class="log-container">
+            <label>处理日志:</label>
+            <div id="logArea" class="log-area"></div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html> 
