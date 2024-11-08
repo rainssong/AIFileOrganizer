@@ -76,9 +76,19 @@ organizeBtn.addEventListener('click', async () => {
         addLog(`找到 ${files.length} 个文件`);
 
         addLog('开始文件整理...');
-        const { content, dialog } = await organizeFiles(files, requirement, openai, modelType);
+        const { content, dialog, errors } = await organizeFiles(files, requirement, openai, modelType);
         lastDialog = dialog; // 保存对话记录
+        
+        // 显示成功信息
         addLog('文件整理完成！', 'success');
+        
+        // 如果有错误，显示错误信息
+        if (errors && errors.length > 0) {
+            errors.forEach(error => {
+                addLog(error, 'error');
+            });
+            addLog(`整理过程中有 ${errors.length} 个文件移动失败`, 'warning');
+        }
 
     } catch (error) {
         addLog(`错误: ${error.message}`, 'error');

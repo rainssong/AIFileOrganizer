@@ -5,21 +5,35 @@ const logger = require('../utils/logger');
 
 async function organizeFiles(files, requirement, openai, modelType) {
     try {
-        // 获取AI的整理建议和对话记录
         const { content, dialog } = await analyzeWithAI(openai, files, requirement, modelType);
         
-        // 解析AI建议并执行文件移动
         const organizationPlan = JSON.parse(content);
+        const errors = [];
         
-        // 执行文件移动
         for (const action of organizationPlan.actions) {
-            const { source, destination } = action;
-            await fs.mkdir(path.dirname(destination), { recursive: true });
-            await fs.rename(source, destination);
-            logger.info(`已移动: ${source} -> ${destination}`);
+            try {
+                const { source, destination } = action;
+                const fileName = path.basename(source);
+                const destDir = path.dirname(destination);
+                
+                const fullDestDir = path.join(destDir, path.basename(destination, path.extname(destination)));
+                const fullDestPath = path.join(fullDestDir, fileName);
+                
+                await fs.mkdir(fullDestDir, { recursive: true });
+                await fs.rename(source, fullDestPath);
+                logger.info(`已移动: ${source} -> ${fullDestPath}`);
+            } catch (moveError) {
+                const errorMsg = `移动失败: ${action.source} -> ${action.destination}, 原因: ${moveError.message}`;
+                logger.error(errorMsg);
+                errors.push(errorMsg);
+            }
         }
 
-        return { content, dialog };
+        return { 
+            content, 
+            dialog,
+            errors: errors.length > 0 ? errors : null
+        };
     } catch (error) {
         logger.error('文件整理错误:', error);
         throw error;

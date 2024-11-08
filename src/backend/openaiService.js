@@ -14,7 +14,15 @@ function initOpenAI(apiKey, modelType = 'qwen') {
 }
 
 async function analyzeWithAI(openai, files, requirement, modelType = 'qwen') {
-    const model = modelType === 'qwen' ? 'qwen-plus' : 'gpt-3.5-turbo';
+    let model;
+    switch (modelType) {
+        case 'qwen':
+            model = 'qwen-plus';
+            break;
+        case 'gpt':
+            model = 'gpt-3.5-turbo';
+            break;
+    }
     
     const messages = [{
         role: "system",
