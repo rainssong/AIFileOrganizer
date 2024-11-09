@@ -4,24 +4,34 @@ const logger = require('../utils/logger');
 
 async function analyzeFiles(folderPath) {
     try {
-        const files = await fs.readdir(folderPath);
-        const fileDetails = await Promise.all(
-            files.map(async (file) => {
-                const filePath = path.join(folderPath, file);
-                const stats = await fs.stat(filePath);
-                return {
-                    name: file,
-                    path: filePath,
-                    size: stats.size,
-                    isDirectory: stats.isDirectory(),
-                    extension: path.extname(file)
-                };
-            })
-        );
-        return fileDetails;
+        const allFiles = [];
+        await scanDirectory(folderPath, allFiles, folderPath);
+        return allFiles;
     } catch (error) {
         logger.error('文件分析错误:', error);
         throw error;
+    }
+}
+
+async function scanDirectory(dirPath, results, basePath) {
+    const files = await fs.readdir(dirPath);
+    
+    for (const file of files) {
+        const fullPath = path.join(dirPath, file);
+        const stats = await fs.stat(fullPath);
+        
+        if (stats.isDirectory()) {
+            await scanDirectory(fullPath, results, basePath);
+        } else {
+            results.push({
+                name: file,
+                path: path.relative(basePath, fullPath),
+                fullPath: fullPath,
+                size: stats.size,
+                isDirectory: false,
+                extension: path.extname(file)
+            });
+        }
     }
 }
 

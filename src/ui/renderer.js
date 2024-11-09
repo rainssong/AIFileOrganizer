@@ -1,6 +1,7 @@
 const { ipcRenderer } = require('electron');
+const path = require('path');
 const { analyzeFiles } = require('../backend/fileAnalyzer');
-const { organizeFiles } = require('../backend/fileOrganizer');
+const { organizeFiles, executeOrganization } = require('../backend/fileOrganizer');
 const { initOpenAI } = require('../backend/openaiService');
 
 // DOM 元素
@@ -17,6 +18,7 @@ const dialogContent = document.getElementById('dialogContent');
 const closeBtn = document.querySelector('.close');
 
 let lastDialog = null;
+let currentOrganizationPlan = null;
 
 // 添加日志
 function addLog(message, type = 'info') {
@@ -32,6 +34,7 @@ selectFolderBtn.addEventListener('click', async () => {
     const folderPath = await ipcRenderer.invoke('select-folder');
     if (folderPath) {
         folderPathInput.value = folderPath;
+        saveSettings();
     }
 });
 
@@ -57,6 +60,23 @@ window.addEventListener('click', (event) => {
     }
 });
 
+// 显示预览对话框
+function showPreview(previewData) {
+    const tbody = document.querySelector('#previewTable tbody');
+    tbody.innerHTML = '';
+    
+    previewData.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${item.source}</td>
+            <td>${path.join(item.destination, path.basename(item.source))}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    document.getElementById('previewModal').style.display = 'block';
+}
+
 // 开始整理
 organizeBtn.addEventListener('click', async () => {
     try {
@@ -75,22 +95,99 @@ organizeBtn.addEventListener('click', async () => {
         const files = await analyzeFiles(folderPath);
         addLog(`找到 ${files.length} 个文件`);
 
-        addLog('开始文件整理...');
-        const { content, dialog, errors } = await organizeFiles(files, requirement, openai, modelType);
-        lastDialog = dialog; // 保存对话记录
+        addLog('生成整理方案...');
+        const result = await organizeFiles(files, requirement, openai, modelType, folderPath);
+        lastDialog = result.dialog;
+        currentOrganizationPlan = result.organizationPlan;
         
-        // 显示成功信息
+        // 显示预览
+        showPreview(result.previewData);
+        
+    } catch (error) {
+        addLog(`错误: ${error.message}`, 'error');
+    }
+});
+
+// 确认整理按钮事件
+document.getElementById('confirmOrganize').addEventListener('click', async () => {
+    try {
+        document.getElementById('previewModal').style.display = 'none';
+        
+        if (!currentOrganizationPlan) {
+            addLog('没有可执行的整理方案', 'error');
+            return;
+        }
+        
+        addLog('开始执行文件整理...');
+        const { errors, moveRecords } = await executeOrganization(
+            currentOrganizationPlan, 
+            folderPathInput.value
+        );
+        
+        // 显示移动记录
+        moveRecords.forEach(record => {
+            addLog(`移动: ${record}`, 'info');
+        });
+        
         addLog('文件整理完成！', 'success');
         
-        // 如果有错误，显示错误信息
-        if (errors && errors.length > 0) {
+        if (errors) {
             errors.forEach(error => {
                 addLog(error, 'error');
             });
             addLog(`整理过程中有 ${errors.length} 个文件移动失败`, 'warning');
         }
-
+        
     } catch (error) {
         addLog(`错误: ${error.message}`, 'error');
     }
-}); 
+});
+
+// 取消整理按钮事件
+document.getElementById('cancelOrganize').addEventListener('click', () => {
+    document.getElementById('previewModal').style.display = 'none';
+    currentOrganizationPlan = null;
+    addLog('已取消文件整理', 'info');
+});
+
+// 在现有的变量声明后添加
+const STORAGE_KEYS = {
+    API_KEY: 'fileOrganizer_apiKey',
+    FOLDER_PATH: 'fileOrganizer_folderPath',
+    MODEL_TYPE: 'fileOrganizer_modelType',
+    REQUIREMENT: 'fileOrganizer_requirement'
+};
+
+// 加载保存的设置
+function loadSavedSettings() {
+    apiKeyInput.value = localStorage.getItem(STORAGE_KEYS.API_KEY) || '';
+    folderPathInput.value = localStorage.getItem(STORAGE_KEYS.FOLDER_PATH) || '';
+    const savedModel = localStorage.getItem(STORAGE_KEYS.MODEL_TYPE);
+    if (savedModel) {
+        modelRadios.forEach(radio => {
+            radio.checked = radio.value === savedModel;
+        });
+    }
+    requirementInput.value = localStorage.getItem(STORAGE_KEYS.REQUIREMENT) || '';
+}
+
+// 保存设置
+function saveSettings() {
+    localStorage.setItem(STORAGE_KEYS.API_KEY, apiKeyInput.value);
+    localStorage.setItem(STORAGE_KEYS.FOLDER_PATH, folderPathInput.value);
+    localStorage.setItem(STORAGE_KEYS.MODEL_TYPE, 
+        Array.from(modelRadios).find(radio => radio.checked).value
+    );
+    localStorage.setItem(STORAGE_KEYS.REQUIREMENT, requirementInput.value);
+}
+
+// 在页面加载时恢复设置
+document.addEventListener('DOMContentLoaded', loadSavedSettings);
+
+// 监听输入变化并保存
+apiKeyInput.addEventListener('change', saveSettings);
+folderPathInput.addEventListener('change', saveSettings);
+modelRadios.forEach(radio => {
+    radio.addEventListener('change', saveSettings);
+});
+requirementInput.addEventListener('change', saveSettings);

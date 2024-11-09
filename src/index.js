@@ -1,7 +1,6 @@
 const { analyzeFiles } = require('./backend/fileAnalyzer');
 const { organizeFiles } = require('./backend/fileOrganizer');
 const { initOpenAI } = require('./backend/openaiService');
-const config = require('./backend/config');
 const logger = require('./utils/logger');
 
 async function main() {
@@ -9,7 +8,7 @@ async function main() {
         // 1. 获取用户输入
         const folderPath = process.argv[2];
         const requirement = process.argv[3];
-        const apiKey = config.openaiApiKey;
+        const apiKey = process.argv[4];  // 从命令行参数获取 API Key
 
         if (!folderPath) {
             throw new Error('请提供文件夹路径');
@@ -18,7 +17,7 @@ async function main() {
             throw new Error('请提供整理需求');
         }
         if (!apiKey) {
-            throw new Error('请在.env文件中设置OPENAI_API_KEY');
+            throw new Error('请提供 API Key');
         }
 
         // 2. 初始化OpenAI
@@ -37,5 +36,3 @@ async function main() {
 
 main();
 
-
-// 运行命令：node src/index.js "F:\Develop\Node.js\project\FileOrganizer\src\testfolder" "按照扩展名放在不同的文件夹下面"

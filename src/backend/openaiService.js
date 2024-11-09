@@ -30,12 +30,16 @@ async function analyzeWithAI(openai, files, requirement, modelType = 'qwen') {
         {
             "actions": [
                 {
-                    "source": "原始文件路径",
-                    "destination": "目标文件路径",
+                    "source": "原始文件的相对路径",
+                    "destination": "目标文件夹的相对路径（不包含文件名）",
                     "action": "move"
                 }
             ]
-        }`
+        }
+        注意：
+        1. 所有路径都应该是相对路径
+        2. destination 只需要指定目标文件夹路径，不要包含文件名
+        3. 不要在路径中重复文件名`
     }, {
         role: "user",
         content: `请分析以下文件并返回整理方案。

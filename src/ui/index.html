@@ -67,6 +67,31 @@
         </div>
     </div>
 
+    <!-- 预览确认对话框 -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>整理方案预览</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <table id="previewTable">
+                    <thead>
+                        <tr>
+                            <th>源文件</th>
+                            <th>目标位置</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="button-group">
+                    <button id="confirmOrganize">确认整理</button>
+                    <button id="cancelOrganize">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="renderer.js"></script>
 </body>
 </html> 
