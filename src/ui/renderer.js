@@ -191,3 +191,31 @@ modelRadios.forEach(radio => {
     radio.addEventListener('change', saveSettings);
 });
 requirementInput.addEventListener('change', saveSettings);
+
+// 获取所有关闭按钮
+const closeButtons = document.querySelectorAll('.close');
+
+// 为所有关闭按钮添加事件监听
+closeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const modal = button.closest('.modal');
+        if (modal) {
+            modal.style.display = 'none';
+            if (modal.id === 'previewModal') {
+                currentOrganizationPlan = null;
+                addLog('已取消文件整理', 'info');
+            }
+        }
+    });
+});
+
+// 点击弹窗外部关闭
+window.addEventListener('click', (event) => {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+        if (event.target.id === 'previewModal') {
+            currentOrganizationPlan = null;
+            addLog('已取消文件整理', 'info');
+        }
+    }
+});
